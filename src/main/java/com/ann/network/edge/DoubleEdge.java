@@ -1,21 +1,18 @@
 package com.ann.network.edge;
 
-import com.ann.network.layer.vertex.Vertex;
+import com.ann.network.input.Numeric;
 
-public class DoubleEdge extends Edge<Double> {
-    public DoubleEdge(Vertex<?> vertex) {
-        super(vertex);
-    }
+public class DoubleEdge extends Edge<Numeric> {
 
     @Override
     public void learn(double loss, double derivative) {
         weight += LEARNING_RATE * loss * source.evaluate() * derivative;
-        isDirty = true;
         source.learn(loss);
+        triggerDirty();
     }
 
     @Override
-    protected Double result() {
-        return source.evaluate() * weight;
+    protected Numeric evaluateFull() {
+        return new Numeric(source.evaluate() * weight);
     }
 }

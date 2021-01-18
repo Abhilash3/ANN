@@ -2,6 +2,7 @@ package com.ann.network;
 
 import com.ann.network.functions.Activation;
 import com.ann.network.input.Input;
+import com.ann.network.input.Numeric;
 
 import java.util.Arrays;
 import java.util.function.ToDoubleFunction;
@@ -29,7 +30,7 @@ public class Utilities {
         throw new UnsupportedOperationException();
     }
 
-    public static <E extends Input> Network<E> buildNetwork(Activation func, int start, int... hidden) {
+    public static <E extends Input> Network<E, Numeric> buildNetwork(Activation func, int start, int... hidden) {
         Network.Builder<E> builder = new Network.Builder<>(func, start);
         for (int a : hidden) {
             builder.addLayer(func, a);
@@ -37,19 +38,14 @@ public class Utilities {
         return builder.finalLayer(func);
     }
 
-    public static <E extends Input> void trainNetwork(Network<E> network, int times, ToDoubleFunction<E[]> mapper, E[][] values) {
+    public static <E extends Input> void trainNetwork(Network<E, Numeric> network, int times, ToDoubleFunction<E[]> mapper, E[][] values) {
         IntStream.range(0, times).forEach(a -> Arrays.stream(values).forEach(b -> {
-            network.register(b);
             double expected = mapper.applyAsDouble(b);
-            LOGGER.fine(String.format("%d ] %s: %s; %s", a + 1, Arrays.toString(b), expected, network.learn(expected)));
+            LOGGER.fine(String.format("%d ] %s: %s; %s", a + 1, Arrays.toString(b), expected, network.learn(expected, b)));
         }));
     }
 
-    public static <E extends Input> void testNetwork(Network<E> network, E[][] values) {
-        LOGGER.fine(network::toString);
-        Arrays.stream(values).forEach(a -> {
-            network.register(a);
-            LOGGER.fine(String.format("%s: %s", Arrays.toString(a), network.evaluate()));
-        });
+    public static <E extends Input> void testNetwork(Network<E, Numeric> network, E[][] values) {
+        Arrays.stream(values).forEach(a -> LOGGER.fine(String.format("%s: %s", Arrays.toString(a), network.evaluate(a))));
     }
 }

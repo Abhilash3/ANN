@@ -1,30 +1,39 @@
 package com.ann.network.edge;
 
+import com.ann.network.input.Input;
 import com.ann.network.layer.vertex.Vertex;
 
-public abstract class Edge<E> {
-    static final double LEARNING_RATE = 0.25;
+public abstract class Edge<E extends Input> {
+    static final double LEARNING_RATE = 0.5;
 
-    Vertex<?> source;
+    Vertex<?, E> source;
     double weight = Math.random() - 0.5;
+    private boolean isDirty = true;
+    private Vertex<E, ?> destination;
+    E result = null;
 
-    boolean isDirty = true;
-    private E result = null;
-
-    Edge(Vertex<?> source) {
+    public void setSource(Vertex<?, E> source) {
         this.source = source;
+        triggerDirty();
     }
 
-    abstract E result();
+    public void setDestination(Vertex<E, ?> destination) {
+        this.destination = destination;
+        triggerDirty();
+    }
 
-    public boolean isDirty() {
-        return isDirty || (source != null && source.isDirty());
+    abstract E evaluateFull();
+
+    public void triggerDirty() {
+        if (isDirty) return;
+        isDirty = true;
+        if (destination != null) destination.triggerDirty();
     }
 
     public E evaluate() {
-        if (isDirty()) {
+        if (isDirty) {
+            result = evaluateFull();
             isDirty = false;
-            result = result();
         }
         return result;
     }
@@ -34,6 +43,6 @@ public abstract class Edge<E> {
 
     @Override
     public String toString() {
-        return source == null ? "" : String.format("%s-[%f]->", source.toString(), weight);
+        return String.format("(%s * %f)", source.toString(), weight);
     }
 }
